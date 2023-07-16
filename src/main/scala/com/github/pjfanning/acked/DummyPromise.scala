@@ -1,4 +1,4 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
 import scala.concurrent.Future
 import scala.concurrent.Promise

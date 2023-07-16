@@ -1,26 +1,26 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import akka.Done
-import akka.actor._
-import akka.stream.Attributes
-import akka.stream.Graph
-import akka.stream.SinkShape
-import akka.stream.scaladsl.{Flow, Keep, Sink}
+import org.apache.pekko.Done
+import org.apache.pekko.actor._
+import org.apache.pekko.stream.Attributes
+import org.apache.pekko.stream.Graph
+import org.apache.pekko.stream.SinkShape
+import org.apache.pekko.stream.scaladsl.{Flow, Keep, Sink}
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 // Simply a container class which signals "this is safe to use for acknowledgement"
-case class AckedSink[-In, +Mat](akkaSink: Graph[SinkShape[AckTup[In]], Mat]) extends AckedGraph[AckedSinkShape[In], Mat] {
-  val shape = new AckedSinkShape(akkaSink.shape) // lazy val shape = new AckedSinkShape(akkaSink.shape)
-  val akkaGraph = akkaSink
+case class AckedSink[-In, +Mat](pekkoSink: Graph[SinkShape[AckTup[In]], Mat]) extends AckedGraph[AckedSinkShape[In], Mat] {
+  val shape = new AckedSinkShape(pekkoSink.shape) // lazy val shape = new AckedSinkShape(pekkoSink.shape)
+  val pekkoGraph = pekkoSink
 
   override def withAttributes(attr: Attributes): AckedSink[In, Mat] =
-    AckedSink(akkaGraph.withAttributes(attr))
+    AckedSink(pekkoGraph.withAttributes(attr))
 
   override def addAttributes(attr: Attributes): AckedSink[In, Mat] =
-    AckedSink(akkaGraph.addAttributes(attr))
+    AckedSink(pekkoGraph.addAttributes(attr))
 }
 
 case object MessageNacked extends Exception(s"A published message was nacked by the broker.")

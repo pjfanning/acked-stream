@@ -1,22 +1,23 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import akka.NotUsed
-import akka.actor._
-import akka.pattern.ask
-import akka.stream.ActorMaterializer
-import akka.stream.ActorMaterializerSettings
-import akka.stream.Materializer
-import akka.stream.Supervision
-import akka.stream.scaladsl.Keep
-import akka.stream.scaladsl.{Sink, Source}
-import org.scalatest.{FunSpec, Matchers}
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor._
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.ActorMaterializer
+import org.apache.pekko.stream.ActorMaterializerSettings
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.Supervision
+import org.apache.pekko.stream.scaladsl.Keep
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
 import scala.util.Random
 import scala.util.{Failure, Success, Try}
 
-class AckedSourceSpec extends FunSpec with Matchers with ActorSystemTest {
+class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
   describe("AckedSource operations") {
     def runLeTest[T, U](input: scala.collection.immutable.Iterable[T] =
                           Range(1, 20))(

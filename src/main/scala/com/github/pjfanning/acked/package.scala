@@ -1,4 +1,4 @@
-package com.timcharper
+package com.github.pjfanning
 
 import scala.concurrent.ExecutionContext
 

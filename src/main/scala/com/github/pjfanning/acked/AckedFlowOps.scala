@@ -1,11 +1,11 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import akka.event.LoggingAdapter
-import akka.stream.Attributes
-import akka.stream.scaladsl.Keep
-import akka.stream.scaladsl.SubFlow
-import akka.stream.{Graph, Materializer, OverflowStrategy}
-import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
+import org.apache.pekko.event.LoggingAdapter
+import org.apache.pekko.stream.Attributes
+import org.apache.pekko.stream.scaladsl.Keep
+import org.apache.pekko.stream.scaladsl.SubFlow
+import org.apache.pekko.stream.{Graph, Materializer, OverflowStrategy}
+import org.apache.pekko.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable
 import scala.concurrent.{Future, Promise}
@@ -16,8 +16,8 @@ import scala.language.implicitConversions
 import scala.language.existentials
 
 abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
-  type UnwrappedRepr[+O] <: akka.stream.scaladsl.FlowOps[O, Mat]
-  type WrappedRepr[+O] <: akka.stream.scaladsl.FlowOps[AckTup[O], Mat]
+  type UnwrappedRepr[+O] <: org.apache.pekko.stream.scaladsl.FlowOps[O, Mat]
+  type WrappedRepr[+O] <: org.apache.pekko.stream.scaladsl.FlowOps[AckTup[O], Mat]
   type Repr[+O] <: AckedFlowOps[O, Mat]
   import FlowHelpers.{propException, propFutureException}
 
@@ -28,11 +28,11 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     emitted by that source is emitted after the last element of this
     flow.
 
-    See FlowOps.++ in akka-stream
+    See FlowOps.++ in pekko-stream
     */
   def ++[U >: Out, Mat2](that: AckedGraph[AckedSourceShape[U], Mat2]): Repr[U] =
     andThen {
-      wrappedRepr.concat(that.akkaGraph)
+      wrappedRepr.concat(that.pekkoGraph)
     }
 
   /**
@@ -40,13 +40,13 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     emitted by that source is emitted after the last element of this
     flow.
 
-    See FlowOps.concat in akka-stream
+    See FlowOps.concat in pekko-stream
     */
   def concat[U >: Out, Mat2](
     that: AckedGraph[AckedSourceShape[U], Mat2]
   ): Repr[U] =
     andThen {
-      wrappedRepr.concat(that.akkaGraph)
+      wrappedRepr.concat(that.pekkoGraph)
     }
 
   def alsoTo(that: AckedGraph[AckedSinkShape[Out], _]): Repr[Out] = {
@@ -66,7 +66,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
         .alsoTo(
           Flow[((Promise[Unit], Promise[Unit]), Out)]
             .map { case ((_, p), data) => (p, data) }
-            .to(that.akkaGraph)
+            .to(that.pekkoGraph)
         )
         .map { case ((p, _), data) => (p, data) }
         .asInstanceOf[WrappedRepr[Out]]
@@ -77,7 +77,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     andThen(wrappedRepr.completionTimeout(timeout))
 
   /**
-    See FlowOps.collect in akka-stream
+    See FlowOps.collect in pekko-stream
 
     A map and a filter. Elements for which the provided
     PartialFunction is not defined are acked.
@@ -119,12 +119,12 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     * }}}
     *
     * If the split predicate `p` throws an exception and the
-    * supervision decision is [[akka.stream.Supervision.Stop]] the
+    * supervision decision is [[org.apache.pekko.stream.Supervision.Stop]] the
     * stream and substreams will be completed with failure.
     *
     * If the split predicate `p` throws an exception and the
-    * supervision decision is [[akka.stream.Supervision.Resume]] or
-    * [[akka.stream.Supervision.Restart]] the element is dropped and
+    * supervision decision is [[org.apache.pekko.stream.Supervision.Resume]] or
+    * [[org.apache.pekko.stream.Supervision.Restart]] the element is dropped and
     * the stream and substreams continue.
     *
     * Exceptions thrown in predicate will be propagated via the
@@ -165,11 +165,11 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   //  * }}}
   //  *
   //  * If the split predicate `p` throws an exception and the supervision decision
-  //  * is [[akka.stream.Supervision.Stop]] the stream and substreams will be completed
+  //  * is [[org.apache.pekko.stream.Supervision.Stop]] the stream and substreams will be completed
   //  * with failure.
   //  *
   //  * If the split predicate `p` throws an exception and the supervision decision
-  //  * is [[akka.stream.Supervision.Resume]] or [[akka.stream.Supervision.Restart]]
+  //  * is [[org.apache.pekko.stream.Supervision.Resume]] or [[org.apache.pekko.stream.Supervision.Restart]]
   //  * the element is dropped and the stream and substreams continue.
   //  *
   //  * '''Emits when''' an element passes through. When the provided predicate is true it emitts the element
@@ -206,7 +206,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   }
 
   /**
-    See FlowOps.groupedWithin in akka-stream
+    See FlowOps.groupedWithin in pekko-stream
 
     Downstream acknowledgement applies to the resulting group (IE: if
     it yields a group of 100, then downstream you can only either ack
@@ -217,7 +217,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   }
 
   /**
-    See FlowOps.buffer in akka-stream
+    See FlowOps.buffer in pekko-stream
 
     Does not accept an OverflowStrategy because only backpressure and
     fail are supported.
@@ -231,7 +231,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   }
 
   /**
-    See FlowOps.grouped in akka-stream
+    See FlowOps.grouped in pekko-stream
 
     Downstream acknowledgement applies to the resulting group (IE: if
     it yields a group of 100, then downstream you can only either ack
@@ -242,7 +242,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   }
 
   /**
-    See FlowOps.mapConcat in akka-stream
+    See FlowOps.mapConcat in pekko-stream
 
     Splits a single element into 0 or more items.
 
@@ -288,7 +288,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     Yields a non-acked flow/source of AckedSource, keyed by the return
     value of the provided function.
 
-    See FlowOps.groupBy in akka-stream
+    See FlowOps.groupBy in pekko-stream
     */
   def groupBy[K, U >: Out](maxSubstreams: Int, f: (Out) ⇒ K) =
     andThenSubFlow {
@@ -301,7 +301,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     Filters elements from the stream for which the predicate returns
     false. Filtered items are acked.
 
-    See FlowOps.filter in akka-stream
+    See FlowOps.filter in pekko-stream
     */
   def filter(predicate: (Out) ⇒ Boolean): Repr[Out] = andThen {
     wrappedRepr.filter {
@@ -316,7 +316,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     Filters elements from the stream for which the predicate returns
     true. Filtered items are acked.
 
-    See FlowOps.filterNot in akka-stream
+    See FlowOps.filterNot in pekko-stream
     */
   def filterNot(predicate: (Out) => Boolean): Repr[Out] = andThen {
     wrappedRepr.filterNot {
@@ -333,7 +333,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     * yielding the next current value.
     *
     * If the function `f` throws an exception and the supervision decision is
-    * [[akka.stream.Supervision.Restart]] current value starts at `zero` again
+    * [[org.apache.pekko.stream.Supervision.Restart]] current value starts at `zero` again
     * the stream will continue.
     *
     * '''Emits when''' upstream completes
@@ -408,7 +408,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     }
 
   /**
-    See FlowOps.log in akka-stream
+    See FlowOps.log in pekko-stream
     */
   def log(name: String, extract: (Out) ⇒ Any = identity)(
     implicit log: LoggingAdapter = null
@@ -417,7 +417,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   }
 
   /**
-    See FlowOps.map in akka-stream
+    See FlowOps.map in pekko-stream
     */
   def map[T](f: Out ⇒ T): Repr[T] = andThen {
     wrappedRepr.map {
@@ -440,11 +440,11 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     */
   def merge[U >: Out](that: AckedGraph[AckedSourceShape[U], _]): Repr[U] =
     andThen {
-      wrappedRepr.merge(that.akkaGraph)
+      wrappedRepr.merge(that.pekkoGraph)
     }
 
   /**
-    See FlowOps.mapAsync in akka-stream
+    See FlowOps.mapAsync in pekko-stream
     */
   def mapAsync[T](parallelism: Int)(f: Out ⇒ Future[T]): Repr[T] = andThen {
     wrappedRepr.mapAsync(parallelism) {
@@ -457,7 +457,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   }
 
   /**
-    See FlowOps.mapAsyncUnordered in akka-stream
+    See FlowOps.mapAsyncUnordered in pekko-stream
     */
   def mapAsyncUnordered[T](parallelism: Int)(f: Out ⇒ Future[T]): Repr[T] =
     andThen {
@@ -471,7 +471,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     }
 
   /**
-    See FlowOps.conflateWithSeed in akka-stream
+    See FlowOps.conflateWithSeed in pekko-stream
 
     Conflated items are grouped together into a single message, the
     acknowledgement of which acknowledges every message that went into
@@ -489,14 +489,14 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     }
 
   /**
-    See FlowOps.take in akka-stream
+    See FlowOps.take in pekko-stream
     */
   def take(n: Long): Repr[Out] = andThen {
     wrappedRepr.take(n)
   }
 
   /**
-    See FlowOps.takeWhile in akka-stream
+    See FlowOps.takeWhile in pekko-stream
     */
   def takeWhile(predicate: (Out) ⇒ Boolean): Repr[Out] = andThen {
     wrappedRepr.takeWhile {
@@ -511,7 +511,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     */
   def zip[U](that: AckedGraph[AckedSourceShape[U], _]): Repr[(Out, U)] =
     andThen {
-      wrappedRepr.zip(that.akkaGraph).map {
+      wrappedRepr.zip(that.pekkoGraph).map {
         case ((p1, d1), (p2, d2)) =>
           p2.completeWith(p1.future)
           (p1, (d1, d2))
@@ -526,7 +526,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     that: AckedGraph[AckedSourceShape[Out2], _]
   )(combine: (Out, Out2) ⇒ Out3): Repr[Out3] =
     andThen {
-      wrappedRepr.zipWith(that.akkaGraph)({
+      wrappedRepr.zipWith(that.pekkoGraph)({
         case ((p1, d1), (p2, d2)) =>
           p2.completeWith(p1.future)
           (p1, propException(p1)(combine(d1, d2)))
@@ -534,7 +534,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     }
 
   /**
-    See FlowOps.takeWithin in akka-stream
+    See FlowOps.takeWithin in pekko-stream
     */
   def takeWithin(d: FiniteDuration): Repr[Out] =
     andThen {
@@ -579,15 +579,15 @@ class AckedFlow[-In, +Out, +Mat](
   type ReprMat[+O, +M] = AckedFlow[In @uncheckedVariance, O, M]
 
   lazy val shape = new AckedFlowShape(wrappedRepr.shape)
-  val akkaGraph = wrappedRepr
+  val pekkoGraph = wrappedRepr
 
   def to[Mat2](sink: AckedSink[Out, Mat2]): AckedSink[In, Mat] =
-    AckedSink(wrappedRepr.to(sink.akkaSink))
+    AckedSink(wrappedRepr.to(sink.pekkoSink))
 
   def toMat[Mat2, Mat3](
     sink: AckedSink[Out, Mat2]
   )(combine: (Mat, Mat2) ⇒ Mat3): AckedSink[In, Mat3] =
-    AckedSink(wrappedRepr.toMat(sink.akkaSink)(combine))
+    AckedSink(wrappedRepr.toMat(sink.pekkoSink)(combine))
 
   protected def andThen[U](next: WrappedRepr[U] @uncheckedVariance): Repr[U] = {
     new AckedFlow(next)
@@ -600,20 +600,20 @@ class AckedFlow[-In, +Out, +Mat](
   }
 
   /**
-    See Flow.via in akka-stream
+    See Flow.via in pekko-stream
     */
   def via[T, Mat2](
     flow: AckedGraph[AckedFlowShape[Out, T], Mat2]
   ): AckedFlow[In, T, Mat] =
-    andThen(wrappedRepr.via(flow.akkaGraph))
+    andThen(wrappedRepr.via(flow.pekkoGraph))
 
   /**
-    See Flow.viaMat in akka-stream
+    See Flow.viaMat in pekko-stream
     */
   def viaMat[T, Mat2, Mat3](
     flow: AckedGraph[AckedFlowShape[Out, T], Mat2]
   )(combine: (Mat, Mat2) ⇒ Mat3): AckedFlow[In, T, Mat3] =
-    andThenMat(wrappedRepr.viaMat(flow.akkaGraph)(combine))
+    andThenMat(wrappedRepr.viaMat(flow.pekkoGraph)(combine))
 
   /**
     Transform the materialized value of this AckedFlow, leaving all other properties as they were.
@@ -633,11 +633,11 @@ class AckedFlow[-In, +Out, +Mat](
 abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
   import FlowHelpers.{propException, propFutureException}
 
-  type UnwrappedRepr[+O] <: akka.stream.scaladsl.FlowOpsMat[O, Mat]
-  type WrappedRepr[+O] <: akka.stream.scaladsl.FlowOpsMat[AckTup[O], Mat]
+  type UnwrappedRepr[+O] <: org.apache.pekko.stream.scaladsl.FlowOpsMat[O, Mat]
+  type WrappedRepr[+O] <: org.apache.pekko.stream.scaladsl.FlowOpsMat[AckTup[O], Mat]
 
-  type UnwrappedReprMat[+O, +M] <: akka.stream.scaladsl.FlowOpsMat[O, M]
-  type WrappedReprMat[+O, +M] <: akka.stream.scaladsl.FlowOpsMat[AckTup[O], M]
+  type UnwrappedReprMat[+O, +M] <: org.apache.pekko.stream.scaladsl.FlowOpsMat[O, M]
+  type WrappedReprMat[+O, +M] <: org.apache.pekko.stream.scaladsl.FlowOpsMat[AckTup[O], M]
 
   type Repr[+O] <: AckedFlowOpsMat[O, Mat @uncheckedVariance]
   type ReprMat[+O, +M] <: AckedFlowOpsMat[O, M]
@@ -665,7 +665,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
         .alsoToMat(
           Flow[((Promise[Unit], Promise[Unit]), Out)]
             .map { case ((_, p), data) => (p, data) }
-            .toMat(that.akkaGraph)(Keep.right)
+            .toMat(that.pekkoGraph)(Keep.right)
         )(matF)
         .map { case ((p, _), data) => (p, data) }
         .asInstanceOf[WrappedReprMat[Out, Mat3]]
@@ -682,7 +682,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
     combine: (Out, Out2) ⇒ Out3
   )(matF: (Mat, Mat2) ⇒ Mat3): ReprMat[Out3, Mat3] = {
     andThenMat {
-      wrappedRepr.zipWithMat(that.akkaGraph)({
+      wrappedRepr.zipWithMat(that.pekkoGraph)({
         case ((p1, d1), (p2, d2)) =>
           p2.completeWith(p1.future)
           (p1, propException(p1)(combine(d1, d2)))
@@ -703,7 +703,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
     that: AckedGraph[AckedSourceShape[U], Mat2]
   )(matF: (Mat, Mat2) ⇒ Mat3): ReprMat[(Out, U), Mat3] = {
     andThenMat {
-      wrappedRepr.zipMat(that.akkaGraph)(matF).map {
+      wrappedRepr.zipMat(that.pekkoGraph)(matF).map {
         case ((p1, d1), (p2, d2)) =>
           p2.completeWith(p1.future)
           (p1, (d1, d2))
@@ -720,7 +720,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
     that: AckedGraph[AckedSourceShape[U], Mat2]
   )(matF: (Mat, Mat2) ⇒ Mat3): ReprMat[U, Mat3] =
     andThenMat {
-      wrappedRepr.mergeMat(that.akkaGraph)(matF)
+      wrappedRepr.mergeMat(that.pekkoGraph)(matF)
     }
 
   protected def andThenMat[U, Mat2](

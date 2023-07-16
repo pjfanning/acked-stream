@@ -1,1 +1,1 @@
-sonatypeProfileName := "com.timcharper"
+sonatypeProfileName := "com.github.pjfanning"

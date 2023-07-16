@@ -1,18 +1,20 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import akka.pattern.ask
-import akka.stream.ActorMaterializer
-import org.scalatest.{FunSpec, Matchers}
-import scala.concurrent.{Future, Promise}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.ActorMaterializer
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
+
+import scala.concurrent.Promise
 import scala.util.{Failure, Success, Try}
 
-class AckedSinkSpec extends FunSpec with Matchers with ActorSystemTest {
+class AckedSinkSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
   describe("head") {
     it("acknowledges only the first element") {
       case class LeException(msg: String) extends Exception(msg)
       val input = (Stream.continually(Promise[Unit]) zip Range.inclusive(1, 5)).toList
-      implicit val materializer = ActorMaterializer()
+      implicit val materializer: ActorMaterializer = ActorMaterializer()
       Try(await(AckedSource(input).runWith(AckedSink.head)))
       input.map { case (p, _) =>
         p.tryFailure(LeException("didn't complete"))

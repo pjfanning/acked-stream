@@ -1,10 +1,10 @@
 name := "acked-streams"
 
-organization := "com.timcharper"
+organization := "com.github.pjfanning"
 
-scalaVersion := "2.13.2"
+scalaVersion := "2.13.11"
 
-crossScalaVersions := Seq("2.12.11", "2.13.2")
+crossScalaVersions := Seq("2.12.18", "2.13.11")
 
 val appProperties = {
   val prop = new java.util.Properties()
@@ -13,25 +13,30 @@ val appProperties = {
 }
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-stream"  % "2.5.31",
-  "org.scalatest"     %% "scalatest"    % "3.1.1" % "test")
+  "org.apache.pekko"  %% "pekko-stream"  % "1.0.0",
+  "org.scalatest"     %% "scalatest"     % "3.2.16" % Test)
 
 version := appProperties.getProperty("version")
 
-homepage := Some(url("https://github.com/timcharper/acked-stream"))
+homepage := Some(url("https://github.com/pjfanning/acked-stream"))
 
 licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 pomExtra := {
   <scm>
-    <url>https://github.com/timcharper/acked-stream</url>
-    <connection>scm:git:git@github.com:timcharper/acked-stream.git</connection>
+    <url>https://github.com/pjfanning/acked-stream</url>
+    <connection>scm:git:git@github.com:pjfanning/acked-stream.git</connection>
   </scm>
   <developers>
     <developer>
       <id>timcharper</id>
       <name>Tim Harper</name>
       <url>http://timcharper.com</url>
+    </developer>
+    <developer>
+      <id>pjfanning</id>
+      <name>PJ Fanning</name>
+      <url>https://github.com/pjfanning</url>
     </developer>
   </developers>
 }

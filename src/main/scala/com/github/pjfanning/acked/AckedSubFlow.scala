@@ -1,7 +1,7 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import akka.stream.scaladsl.FlowOps
-import akka.stream.scaladsl.SubFlow
+import org.apache.pekko.stream.scaladsl.FlowOps
+import org.apache.pekko.stream.scaladsl.SubFlow
 import language.higherKinds
 import scala.annotation.unchecked.uncheckedVariance
 

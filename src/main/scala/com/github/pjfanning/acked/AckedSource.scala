@@ -1,10 +1,10 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import akka.{Done, NotUsed}
-import akka.pattern.pipe
-import akka.stream.Attributes
-import akka.stream.{Graph, Materializer}
-import akka.stream.scaladsl.{Keep, RunnableGraph, Source}
+import org.apache.pekko.{Done, NotUsed}
+import org.apache.pekko.pattern.pipe
+import org.apache.pekko.stream.Attributes
+import org.apache.pekko.stream.{Graph, Materializer}
+import org.apache.pekko.stream.scaladsl.{Keep, RunnableGraph, Source}
 
 import scala.annotation.tailrec
 import scala.annotation.unchecked.uncheckedVariance
@@ -21,39 +21,39 @@ class AckedSource[+Out, +Mat](val wrappedRepr: Source[AckTup[Out], Mat]) extends
   type ReprMat[+O, +M] = AckedSource[O, M]
 
   lazy val shape = new AckedSourceShape(wrappedRepr.shape)
-  val akkaGraph = wrappedRepr
+  val pekkoGraph = wrappedRepr
   /**
-   * Connect this [[akka.stream.scaladsl.Source]] to a [[akka.stream.scaladsl.Sink]],
+   * Connect this [[org.apache.pekko.stream.scaladsl.Source]] to a [[org.apache.pekko.stream.scaladsl.Sink]],
    * concatenating the processing steps of both.
    */
   def runAckMat[Mat2](combine: (Mat, Future[Done]) ⇒ Mat2)(implicit materializer: Materializer): Mat2 =
-    wrappedRepr.toMat(AckedSink.ack.akkaSink)(combine).run
+    wrappedRepr.toMat(AckedSink.ack.pekkoSink)(combine).run
 
   def runAck(implicit materializer: Materializer) = runAckMat(Keep.right)
 
   def runWith[Mat2](sink: AckedSink[Out, Mat2])(implicit materializer: Materializer): Mat2 =
-    wrappedRepr.runWith(sink.akkaSink)
+    wrappedRepr.runWith(sink.pekkoSink)
 
   def runForeach(f: (Out) ⇒ Unit)(implicit materializer: Materializer): Future[Done] =
     runWith(AckedSink.foreach(f))
 
   def to[Mat2](sink: AckedSink[Out, Mat2]): RunnableGraph[Mat] =
-    wrappedRepr.to(sink.akkaSink)
+    wrappedRepr.to(sink.pekkoSink)
 
   def toMat[Mat2, Mat3](sink: AckedSink[Out, Mat2])(combine: (Mat, Mat2) ⇒ Mat3): RunnableGraph[Mat3] =
-    wrappedRepr.toMat(sink.akkaSink)(combine)
+    wrappedRepr.toMat(sink.pekkoSink)(combine)
 
   /**
-    See Source.via in akka-stream
+    See Source.via in pekko-stream
     */
   def via[T, Mat2](flow: AckedGraph[AckedFlowShape[Out, T], Mat2]): AckedSource[T, Mat] =
-    andThen(wrappedRepr.via(flow.akkaGraph))
+    andThen(wrappedRepr.via(flow.pekkoGraph))
 
   /**
-    See Source.viaMat in akka-stream
+    See Source.viaMat in pekko-stream
     */
   def viaMat[T, Mat2, Mat3](flow: AckedGraph[AckedFlowShape[Out, T], Mat2])(combine: (Mat, Mat2) ⇒ Mat3): AckedSource[T, Mat3] =
-    andThenMat(wrappedRepr.viaMat(flow.akkaGraph)(combine))
+    andThenMat(wrappedRepr.viaMat(flow.pekkoGraph)(combine))
 
   /**
     Transform the materialized value of this AckedSource, leaving all other properties as they were.

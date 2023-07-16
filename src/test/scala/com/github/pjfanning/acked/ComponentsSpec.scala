@@ -1,20 +1,18 @@
-package com.timcharper.acked
+package com.github.pjfanning.acked
 
-import org.scalatest.{FunSpec, Matchers}
-
-import akka.stream.Attributes
-import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.Keep
-import akka.stream.scaladsl.Source
+import org.apache.pekko.stream.{ActorMaterializer, Attributes, OverflowStrategy}
+import org.apache.pekko.stream.scaladsl.Keep
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Promise
 import scala.collection.mutable._
-import scala.util.{Try, Success, Failure}
+import scala.util.{Success, Try}
 import scala.concurrent.duration._
 
-class ComponentsSpec extends FunSpec with Matchers with ActorSystemTest {
+class ComponentsSpec extends AnyFunSpec with Matchers with ActorSystemTest {
   trait Fixtures {
-    implicit val materializer = akka.stream.ActorMaterializer()
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     val data: List[(Promise[Unit], Int)] =
       Stream
