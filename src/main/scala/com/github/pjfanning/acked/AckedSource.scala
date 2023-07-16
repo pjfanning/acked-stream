@@ -27,7 +27,7 @@ class AckedSource[+Out, +Mat](val wrappedRepr: Source[AckTup[Out], Mat]) extends
    * concatenating the processing steps of both.
    */
   def runAckMat[Mat2](combine: (Mat, Future[Done]) ⇒ Mat2)(implicit materializer: Materializer): Mat2 =
-    wrappedRepr.toMat(AckedSink.ack.pekkoSink)(combine).run
+    wrappedRepr.toMat(AckedSink.ack.pekkoSink)(combine).run()
 
   def runAck(implicit materializer: Materializer) = runAckMat(Keep.right)
 
@@ -89,24 +89,32 @@ trait AckedSourceMagnet {
   def apply: Out
 }
 object AckedSourceMagnet extends LowerPriorityAckedSourceMagnet {
-  implicit def fromPromiseIterable[T](iterable: scala.collection.immutable.Iterable[AckTup[T]]) = new AckedSourceMagnet {
+  implicit def fromPromiseIterable[T](iterable: scala.collection.immutable.Iterable[AckTup[T]]): AckedSourceMagnet {
+    type Out = AckedSource[T, NotUsed]
+  } = new AckedSourceMagnet {
     type Out = AckedSource[T, NotUsed]
     def apply = new AckedSource(Source(iterable))
   }
 
-  implicit def fromPromiseSource[T, M](source: Source[AckTup[T], M]) = new AckedSourceMagnet {
+  implicit def fromPromiseSource[T, M](source: Source[AckTup[T], M]): AckedSourceMagnet {
+    type Out = AckedSource[T, M]
+  } = new AckedSourceMagnet {
     type Out = AckedSource[T, M]
     def apply = new AckedSource(source)
   }
 }
 
 private[acked] abstract class LowerPriorityAckedSourceMagnet {
-  implicit def fromIterable[T](iterable: scala.collection.immutable.Iterable[T]) = new AckedSourceMagnet {
+  implicit def fromIterable[T](iterable: scala.collection.immutable.Iterable[T]): AckedSourceMagnet {
+    type Out = AckedSource[T, NotUsed]
+  } = new AckedSourceMagnet {
     type Out = AckedSource[T, NotUsed]
     def apply = new AckedSource(Source(Stream.continually(Promise[Unit]()) zip iterable))
   }
 
-  implicit def fromSource[T, M](source: Source[T, M]) = new AckedSourceMagnet {
+  implicit def fromSource[T, M](source: Source[T, M]): AckedSourceMagnet {
+    type Out = AckedSource[T, M]
+  } = new AckedSourceMagnet {
     type Out = AckedSource[T, M]
     def apply = new AckedSource(source.map(d => (Promise[Unit](), d)))
   }
