@@ -14,9 +14,9 @@ Add the following to `build.sbt`:
 
 TL; DR - http://tim.theenchanter.com/2015/07/the-need-for-acknowledgement-in-streams.html
 
-Acknowledged Streams builds on Akka streams and provides the mechanism to receive signal when a message has completed it's flight through a stream pipeline (was filtered, or processed by some sink). By so doing, it provides the underlying component necessary for stream persistence. It safely supports operations that modify element cardinality, such as `grouped`, `groupedWithin`, `mapConcat`, etc. It's heavily tested to ensure that it is impossible for an element to complete its flight through the stream and not be acknowledged.
+Acknowledged Streams builds on Pekko streams and provides the mechanism to receive signal when a message has completed it's flight through a stream pipeline (was filtered, or processed by some sink). By so doing, it provides the underlying component necessary for stream persistence. It safely supports operations that modify element cardinality, such as `grouped`, `groupedWithin`, `mapConcat`, etc. It's heavily tested to ensure that it is impossible for an element to complete its flight through the stream and not be acknowledged.
 
-The first version uses Promise objects to signal acknowledgement upstream. While there are situations in which this is not ideal (IE: acknowledgement does not backpressure), it is incredibly simple to implement, and Akka streams presently lacks the extensibility to implement acknowledgement as generally as it is implemented in this library.
+The first version uses Promise objects to signal acknowledgement upstream. While there are situations in which this is not ideal (IE: acknowledgement does not backpressure), it is incredibly simple to implement, and Pekko streams presently lacks the extensibility to implement acknowledgement as generally as it is implemented in this library.
 
 ## Usage
 
@@ -33,7 +33,7 @@ See the [acked-stream tests](https://github.com/pjfanning/acked-stream/tree/main
 
 ## Supported operations
 
-The API mirrors the Akka Stream API where it is possible to positively correlate a stream element with an input element. AckedFlow and AckedSink are implemented and behave accordingly (where an AckedSink is responsible for message acknowledgmeent).
+The API mirrors the Pekko Stream API where it is possible to positively correlate a stream element with an input element. AckedFlow and AckedSink are implemented and behave accordingly (where an AckedSink is responsible for message acknowledgmeent).
 
 Notes on operations:
 
