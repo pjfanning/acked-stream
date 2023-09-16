@@ -4,7 +4,7 @@ organization := "com.github.pjfanning"
 
 scalaVersion := "2.13.12"
 
-crossScalaVersions := Seq("2.12.18", "2.13.12")
+crossScalaVersions := Seq("2.12.18", "2.13.12", "3.3.1")
 
 val appProperties = {
   val prop = new java.util.Properties()

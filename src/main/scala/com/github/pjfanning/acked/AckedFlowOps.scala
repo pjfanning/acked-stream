@@ -578,7 +578,7 @@ class AckedFlow[-In, +Out, +Mat](
   type Repr[+O] = AckedFlow[In @uncheckedVariance, O, Mat @uncheckedVariance]
   type ReprMat[+O, +M] = AckedFlow[In @uncheckedVariance, O, M]
 
-  lazy val shape = new AckedFlowShape(wrappedRepr.shape)
+  override val shape = new AckedFlowShape(wrappedRepr.shape)
   val pekkoGraph = wrappedRepr
 
   def to[Mat2](sink: AckedSink[Out, Mat2]): AckedSink[In, Mat] =
@@ -692,7 +692,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
 
   @inline
   protected implicit def collapse2to0Mat[U, Mat2](
-    next: wrappedRepr.ReprMat[_, _]#ReprMat[AckTup[U], Mat2]
+    next: org.apache.pekko.stream.scaladsl.FlowOpsMat[AckTup[U], Mat2]
   ): WrappedReprMat[U, Mat2] = next.asInstanceOf[WrappedReprMat[U, Mat2]]
 
   // /**

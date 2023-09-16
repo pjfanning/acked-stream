@@ -20,7 +20,7 @@ class AckedSource[+Out, +Mat](val wrappedRepr: Source[AckTup[Out], Mat]) extends
   type WrappedReprMat[+O, +M] = Source[AckTup[O], M]
   type ReprMat[+O, +M] = AckedSource[O, M]
 
-  lazy val shape = new AckedSourceShape(wrappedRepr.shape)
+  override val shape = new AckedSourceShape(wrappedRepr.shape)
   val pekkoGraph = wrappedRepr
   /**
    * Connect this [[org.apache.pekko.stream.scaladsl.Source]] to a [[org.apache.pekko.stream.scaladsl.Sink]],

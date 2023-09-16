@@ -57,7 +57,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
       fn: (Throwable, AckedSource[Int, NotUsed]) => AckedSource[_, NotUsed]
     ) = {
       case object LeException extends Exception("le fail")
-      implicit val materializer = ActorMaterializer(
+      implicit val materializer: ActorMaterializer = ActorMaterializer(
         ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
           Supervision.resumingDecider: Supervision.Decider
         )
@@ -72,7 +72,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("filter") {
       it("acks the promises that fail the filter") {
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.filter { n =>
             n % 2 == 0
@@ -104,7 +104,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("grouped") {
       it("acks all messages when the group is acked") {
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.grouped(20).acked.runWith(Sink.fold(0) { (a, b) =>
             a + 1
@@ -150,7 +150,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
           s"only calls the function once per element when ${thisCase} (regression test)"
         ) {
           var count = 0
-          implicit val materializer = ActorMaterializer(
+          implicit val materializer: ActorMaterializer = ActorMaterializer(
             ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
               Supervision.resumingDecider: Supervision.Decider
             )
@@ -212,7 +212,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("mapConcat") {
       it("Acks messages that are filtered by returning List.empty") {
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.mapConcat(n => List.empty[Int]).acked.runWith(Sink.fold(0)(_ + _))
         }
@@ -221,7 +221,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
       }
 
       it("Acks messages that are split into multiple messages") {
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.mapConcat(n => List(n, n)).acked.runWith(Sink.fold(0)(_ + _))
         }
@@ -240,18 +240,18 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("alsoTo") {
       it("acknowledges elements after they've hit both sinks") {
-        implicit val materializer = ActorMaterializer(
+        implicit val materializer: ActorMaterializer = ActorMaterializer(
           ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
             Supervision.resumingDecider: Supervision.Decider
           )
         )
         val oddFailure = new Exception("odd")
         val evenFailure = new Exception("even")
-        val rejectOdds = AckedSink.foreach { n: Int =>
+        val rejectOdds = AckedSink.foreach { (n: Int) =>
           if ((n % 2) == 1)
             throw (oddFailure)
         }
-        val rejectEvens = AckedSink.foreach { n: Int =>
+        val rejectEvens = AckedSink.foreach { (n: Int) =>
           if ((n % 2) == 0)
             throw (evenFailure)
         }
@@ -267,18 +267,18 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("alsoToMat") {
       it("acknowledges elements after they've hit both sinks") {
-        implicit val materializer = ActorMaterializer(
+        implicit val materializer: ActorMaterializer = ActorMaterializer(
           ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
             Supervision.resumingDecider: Supervision.Decider
           )
         )
         val oddFailure = new Exception("odd")
         val evenFailure = new Exception("even")
-        val rejectOdds = AckedSink.foreach { n: Int =>
+        val rejectOdds = AckedSink.foreach { (n: Int) =>
           if ((n % 2) == 1)
             throw (oddFailure)
         }
-        val rejectEvens = AckedSink.foreach { n: Int =>
+        val rejectEvens = AckedSink.foreach { (n: Int) =>
           if ((n % 2) == 0)
             throw (evenFailure)
         }
@@ -301,7 +301,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
       it(
         "routes each element to a new acknowledged stream when the predicate matches"
       ) {
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val (completions, result) = runLeTest(1 to 20) { src =>
           src
             .splitWhen(_ % 4 == 0)
@@ -334,7 +334,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
         }
         Supervision.Resume
       }
-      implicit val materializer = ActorMaterializer(
+      implicit val materializer: ActorMaterializer = ActorMaterializer(
         ActorMaterializerSettings(actorSystem).withSupervisionStrategy(decider)
       )
 
