@@ -2,9 +2,9 @@ name := "acked-streams"
 
 organization := "com.github.pjfanning"
 
-scalaVersion := "2.13.11"
+scalaVersion := "2.13.12"
 
-crossScalaVersions := Seq("2.12.18", "2.13.11")
+crossScalaVersions := Seq("2.12.18", "2.13.12")
 
 val appProperties = {
   val prop = new java.util.Properties()
@@ -13,8 +13,8 @@ val appProperties = {
 }
 
 libraryDependencies ++= Seq(
-  "org.apache.pekko"  %% "pekko-stream"  % "1.0.0",
-  "org.scalatest"     %% "scalatest"     % "3.2.16" % Test)
+  "org.apache.pekko"  %% "pekko-stream"  % "1.0.1",
+  "org.scalatest"     %% "scalatest"     % "3.2.17" % Test)
 
 version := appProperties.getProperty("version")
 
