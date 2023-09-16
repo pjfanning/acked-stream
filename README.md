@@ -8,7 +8,7 @@ Acknowledged Streams builds against pekko-stream `1.0`.
 
 Add the following to `build.sbt`:
 
-    libraryDependencies += "com.github.pjfanning" %% "acked-streams" % "1.0.0"
+    libraryDependencies += "com.github.pjfanning" %% "acked-streams" % "1.0.1"
 
 ## Motivation
 
