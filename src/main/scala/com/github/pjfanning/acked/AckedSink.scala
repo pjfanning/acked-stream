@@ -23,7 +23,7 @@ case class AckedSink[-In, +Mat](pekkoSink: Graph[SinkShape[AckTup[In]], Mat]) ex
     AckedSink(pekkoGraph.addAttributes(attr))
 }
 
-case object MessageNacked extends Exception(s"A published message was nacked by the broker.")
+case object MessageNacked extends Exception("A published message was nacked by the broker.")
 
 object AckedSink {
   import FlowHelpers.propException
