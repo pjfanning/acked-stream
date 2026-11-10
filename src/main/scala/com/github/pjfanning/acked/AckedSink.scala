@@ -35,7 +35,7 @@ object AckedSink {
   }
 
   def head[T] = AckedSink[T, Future[T]] {
-    implicit val ec = SameThreadExecutionContext
+    implicit val ec: ExecutionContext = ExecutionContext.parasitic
     val s = Sink.head[AckTup[T]]
     s.mapMaterializedValue {
       _.map{ case (p, out) =>
