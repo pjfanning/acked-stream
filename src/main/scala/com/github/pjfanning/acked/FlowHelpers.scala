@@ -1,11 +1,11 @@
 package com.github.pjfanning.acked
 
-import scala.concurrent.{Promise, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 object FlowHelpers {
   // propagate exception, doesn't recover
   def propFutureException[T](p: Promise[Unit])(f: => Future[T]): Future[T] = {
-    implicit val ec = SameThreadExecutionContext
+    implicit val ec: ExecutionContext = ExecutionContext.parasitic
     val result = propException(p)(f)
     result.failed
       .foreach { case e => p.failure(e) }

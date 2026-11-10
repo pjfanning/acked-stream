@@ -8,7 +8,7 @@ import org.apache.pekko.stream.{Graph, Materializer, OverflowStrategy}
 import org.apache.pekko.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
 import scala.inline
 import scala.language.higherKinds
@@ -50,7 +50,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     }
 
   def alsoTo(that: AckedGraph[AckedSinkShape[Out], _]): Repr[Out] = {
-    implicit val ec = SameThreadExecutionContext
+    implicit val ec: ExecutionContext = ExecutionContext.parasitic
     andThen {
       val forking = wrappedRepr.map {
         case (p, data) =>
@@ -260,7 +260,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
           p.success(()) // effectively a filter. We're done with this message.
           items
         } else {
-          implicit val ec = SameThreadExecutionContext
+          implicit val ec: ExecutionContext = ExecutionContext.parasitic
           p.completeWith(Future.sequence(items.map(_._1.future)).map(_ => ()))
           items
         }
@@ -422,7 +422,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   def map[T](f: Out ⇒ T): Repr[T] = andThen {
     wrappedRepr.map {
       case (p, d) =>
-        implicit val ec = SameThreadExecutionContext
+        implicit val ec: ExecutionContext = ExecutionContext.parasitic
         (p, propException(p)(f(d)))
     }
   }
@@ -449,7 +449,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
   def mapAsync[T](parallelism: Int)(f: Out ⇒ Future[T]): Repr[T] = andThen {
     wrappedRepr.mapAsync(parallelism) {
       case (p, d) =>
-        implicit val ec = SameThreadExecutionContext
+        implicit val ec: ExecutionContext = ExecutionContext.parasitic
         propFutureException(p)(f(d)) map { r =>
           (p, r)
         }
@@ -463,7 +463,7 @@ abstract class AckedFlowOps[+Out, +Mat] extends AnyRef { self =>
     andThen {
       wrappedRepr.mapAsyncUnordered(parallelism) {
         case (p, d) =>
-          implicit val ec = SameThreadExecutionContext
+          implicit val ec: ExecutionContext = ExecutionContext.parasitic
           propFutureException(p)(f(d)) map { r =>
             (p, r)
           }
@@ -645,7 +645,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
   def alsoToMat[Mat2, Mat3](
     that: AckedGraph[AckedSinkShape[Out], Mat2]
   )(matF: (Mat, Mat2) => Mat3): ReprMat[Out, Mat3] = {
-    implicit val ec = SameThreadExecutionContext
+    implicit val ec: ExecutionContext = ExecutionContext.parasitic
     andThenMat {
       val forking = wrappedRepr.map {
         case (p, data) =>
@@ -657,11 +657,7 @@ abstract class AckedFlowOpsMat[+Out, +Mat] extends AckedFlowOps[Out, Mat] {
           ((l, r), data)
         // null
       }
-      // HACK! Work around https://github.com/akka/akka/issues/19336
-      val elevated = forking
-        .asInstanceOf[UnwrappedRepr[((Promise[Unit], Promise[Unit]), Out)]]
-
-      elevated
+      forking
         .alsoToMat(
           Flow[((Promise[Unit], Promise[Unit]), Out)]
             .map { case ((_, p), data) => (p, data) }

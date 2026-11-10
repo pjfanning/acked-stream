@@ -73,7 +73,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
           }.acked.runWith(Sink.fold(0)(_ + _))
         }
         result should be(110)
-        implicit val ec = SameThreadExecutionContext
+        implicit val ec: ExecutionContext = ExecutionContext.parasitic
         assertAcked(completions)
       }
 
