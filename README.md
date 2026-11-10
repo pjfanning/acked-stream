@@ -4,11 +4,14 @@ This is an [Apache Pekko](https://pekko.apache.org) fork of [timcharper/acked-st
 
 ## Installation
 
-Acknowledged Streams builds against pekko-stream `1.0`.
-
 Add the following to `build.sbt`:
 
-    libraryDependencies += "com.github.pjfanning" %% "acked-streams" % "1.0.1"
+    libraryDependencies += "com.github.pjfanning" %% "acked-streams" % "2.0.0"
+
+| acked-streams | Pekko | Scala            | Java |
+|---------------|-------|------------------|------|
+| 2.0.x         | 2.0   | 2.13, 3          | 17+  |
+| 1.0.x         | 1.x   | 2.12, 2.13, 3    | 8+   |
 
 ## Motivation
 

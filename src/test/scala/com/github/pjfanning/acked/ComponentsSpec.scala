@@ -1,6 +1,6 @@
 package com.github.pjfanning.acked
 
-import org.apache.pekko.stream.{ActorMaterializer, Attributes, OverflowStrategy}
+import org.apache.pekko.stream.{Attributes, Materializer, OverflowStrategy}
 import org.apache.pekko.stream.scaladsl.Keep
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 
 class ComponentsSpec extends AnyFunSpec with Matchers with ActorSystemTest {
   trait Fixtures {
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val materializer: Materializer = Materializer(actorSystem)
 
     val data: List[(Promise[Unit], Int)] =
       Stream

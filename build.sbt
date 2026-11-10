@@ -2,9 +2,9 @@ name := "acked-streams"
 
 organization := "com.github.pjfanning"
 
-scalaVersion := "2.13.12"
+scalaVersion := "2.13.18"
 
-crossScalaVersions := Seq("2.12.18", "2.13.12", "3.3.1")
+crossScalaVersions := Seq("2.13.18", "3.3.9")
 
 val appProperties = {
   val prop = new java.util.Properties()
@@ -13,8 +13,8 @@ val appProperties = {
 }
 
 libraryDependencies ++= Seq(
-  "org.apache.pekko"  %% "pekko-stream"  % "1.0.1",
-  "org.scalatest"     %% "scalatest"     % "3.2.17" % Test)
+  "org.apache.pekko"  %% "pekko-stream"  % "2.0.0",
+  "org.scalatest"     %% "scalatest"     % "3.2.19" % Test)
 
 version := appProperties.getProperty("version")
 
@@ -44,11 +44,10 @@ pomExtra := {
 publishMavenStyle := true
 
 publishTo := {
-  val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
+    Some("central-snapshots" at "https://central.sonatype.com/repository/maven-snapshots/")
   else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    localStaging.value
 }
 
 Test / publishArtifact := false

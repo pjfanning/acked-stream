@@ -3,9 +3,7 @@ package com.github.pjfanning.acked
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor._
 import org.apache.pekko.pattern.ask
-import org.apache.pekko.stream.ActorMaterializer
-import org.apache.pekko.stream.ActorMaterializerSettings
-import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.{ActorAttributes, Materializer}
 import org.apache.pekko.stream.Supervision
 import org.apache.pekko.stream.scaladsl.Keep
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
@@ -57,11 +55,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
       fn: (Throwable, AckedSource[Int, NotUsed]) => AckedSource[_, NotUsed]
     ) = {
       case object LeException extends Exception("le fail")
-      implicit val materializer: ActorMaterializer = ActorMaterializer(
-        ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
-          Supervision.resumingDecider: Supervision.Decider
-        )
-      )
+      implicit val materializer: Materializer = Materializer(actorSystem, ActorAttributes.supervisionStrategy(Supervision.resumingDecider: Supervision.Decider))
       val (completions, result) = runLeTest(Range.inclusive(1, 20)) { s =>
         fn(LeException, s).runAck
       }
@@ -72,7 +66,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("filter") {
       it("acks the promises that fail the filter") {
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer(actorSystem)
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.filter { n =>
             n % 2 == 0
@@ -104,7 +98,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("grouped") {
       it("acks all messages when the group is acked") {
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer(actorSystem)
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.grouped(20).acked.runWith(Sink.fold(0) { (a, b) =>
             a + 1
@@ -150,11 +144,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
           s"only calls the function once per element when ${thisCase} (regression test)"
         ) {
           var count = 0
-          implicit val materializer: ActorMaterializer = ActorMaterializer(
-            ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
-              Supervision.resumingDecider: Supervision.Decider
-            )
-          )
+          implicit val materializer: Materializer = Materializer(actorSystem, ActorAttributes.supervisionStrategy(Supervision.resumingDecider: Supervision.Decider))
           val (completions, result) = runLeTest(1 to 1) {
             _.mapAsync(4) { n =>
               count = count + 1
@@ -212,7 +202,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("mapConcat") {
       it("Acks messages that are filtered by returning List.empty") {
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer(actorSystem)
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.mapConcat(n => List.empty[Int]).acked.runWith(Sink.fold(0)(_ + _))
         }
@@ -221,7 +211,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
       }
 
       it("Acks messages that are split into multiple messages") {
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer(actorSystem)
         val (completions, result) = runLeTest(Range.inclusive(1, 20)) {
           _.mapConcat(n => List(n, n)).acked.runWith(Sink.fold(0)(_ + _))
         }
@@ -240,11 +230,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("alsoTo") {
       it("acknowledges elements after they've hit both sinks") {
-        implicit val materializer: ActorMaterializer = ActorMaterializer(
-          ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
-            Supervision.resumingDecider: Supervision.Decider
-          )
-        )
+        implicit val materializer: Materializer = Materializer(actorSystem, ActorAttributes.supervisionStrategy(Supervision.resumingDecider: Supervision.Decider))
         val oddFailure = new Exception("odd")
         val evenFailure = new Exception("even")
         val rejectOdds = AckedSink.foreach { (n: Int) =>
@@ -267,11 +253,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
 
     describe("alsoToMat") {
       it("acknowledges elements after they've hit both sinks") {
-        implicit val materializer: ActorMaterializer = ActorMaterializer(
-          ActorMaterializerSettings(actorSystem).withSupervisionStrategy(
-            Supervision.resumingDecider: Supervision.Decider
-          )
-        )
+        implicit val materializer: Materializer = Materializer(actorSystem, ActorAttributes.supervisionStrategy(Supervision.resumingDecider: Supervision.Decider))
         val oddFailure = new Exception("odd")
         val evenFailure = new Exception("even")
         val rejectOdds = AckedSink.foreach { (n: Int) =>
@@ -301,7 +283,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
       it(
         "routes each element to a new acknowledged stream when the predicate matches"
       ) {
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val materializer: Materializer = Materializer(actorSystem)
         val (completions, result) = runLeTest(1 to 20) { src =>
           src
             .splitWhen(_ % 4 == 0)
@@ -334,9 +316,7 @@ class AckedSourceSpec extends AnyFunSpec with Matchers with ActorSystemTest {
         }
         Supervision.Resume
       }
-      implicit val materializer: ActorMaterializer = ActorMaterializer(
-        ActorMaterializerSettings(actorSystem).withSupervisionStrategy(decider)
-      )
+      implicit val materializer: Materializer = Materializer(actorSystem, ActorAttributes.supervisionStrategy(decider))
 
       import scala.concurrent.ExecutionContext.Implicits.global
       await(

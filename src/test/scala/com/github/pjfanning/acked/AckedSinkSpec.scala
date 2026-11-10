@@ -1,7 +1,7 @@
 package com.github.pjfanning.acked
 
 import org.apache.pekko.pattern.ask
-import org.apache.pekko.stream.ActorMaterializer
+import org.apache.pekko.stream.Materializer
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -14,7 +14,7 @@ class AckedSinkSpec extends AnyFunSpec with Matchers with ActorSystemTest {
     it("acknowledges only the first element") {
       case class LeException(msg: String) extends Exception(msg)
       val input = (Stream.continually(Promise[Unit]) zip Range.inclusive(1, 5)).toList
-      implicit val materializer: ActorMaterializer = ActorMaterializer()
+      implicit val materializer: Materializer = Materializer(actorSystem)
       Try(await(AckedSource(input).runWith(AckedSink.head)))
       input.map { case (p, _) =>
         p.tryFailure(LeException("didn't complete"))

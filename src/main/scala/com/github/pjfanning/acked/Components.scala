@@ -51,7 +51,6 @@ object Components {
   private val DropHead = OverflowStrategy.dropHead
   private val DropTail = OverflowStrategy.dropTail
   private val DropBuffer = OverflowStrategy.dropBuffer
-  private val DropNew = OverflowStrategy.dropNew
   private val Backpressure = OverflowStrategy.backpressure
   private val Fail = OverflowStrategy.fail
 
@@ -134,13 +133,6 @@ object Components {
                     dropped(buffer.toSeq: _*)
                     buffer.clear()
                     grabAndPull()
-                  case DropNew =>
-                    grab(in)._1.tryFailure(
-                      DroppedException(
-                        s"message was dropped due to buffer overflow; size = $size"
-                      )
-                    )
-                    if (!hasBeenPulled(in)) pull(in)
                   case Fail =>
                     dropped(buffer.toSeq: _*)
                     buffer.clear()
